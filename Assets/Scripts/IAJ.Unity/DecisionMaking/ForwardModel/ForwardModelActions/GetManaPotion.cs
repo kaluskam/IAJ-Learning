@@ -50,6 +50,10 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.ForwardModel.ForwardModelActio
             return base.GetHValue(worldModel);
         }
 
+        public override float GetReward(WorldModel worldModel)
+        {
+            return 10f;
+        }
 
     }
 }

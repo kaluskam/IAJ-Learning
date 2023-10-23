@@ -109,5 +109,15 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.ForwardModel
             return Action.GetHValueFinal(worldModel) + duration / 150;
         }
 
+        public virtual float GetReward(WorldModel worldModel)
+        {
+            var HP = Convert.ToInt32(worldModel.GetProperty(Properties.HP));
+            var money = Convert.ToInt32(worldModel.GetProperty(Properties.MONEY));
+            var time = Convert.ToInt32(worldModel.GetProperty(Properties.TIME));
+            if (HP > 0 && money == 25 && time < 150) return 100;
+            if (HP <= 0 || time >= 150) return -100;
+            return 0;
+        }
+
     }
 }

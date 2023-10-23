@@ -5,11 +5,13 @@ using UnityEngine.AI;
 using Assets.Scripts.IAJ.Unity.DecisionMaking.ForwardModel;
 using Assets.Scripts.IAJ.Unity.DecisionMaking.GOB;
 using Assets.Scripts.IAJ.Unity.DecisionMaking.MCTS;
+using Assets.Scripts.IAJ.Unity.DecisionMaking.RL;
 using Assets.Scripts.IAJ.Unity.DecisionMaking.ForwardModel.ForwardModelActions;
 using Assets.Scripts.Game;
 using Assets.Scripts.Game.NPCs;
 using Assets.Scripts.IAJ.Unity.Utils;
 using Assets.Scripts.IAJ.Unity;
+using System.Runtime.CompilerServices;
 
 public class AutonomousCharacter : NPC
 {
@@ -23,7 +25,7 @@ public class AutonomousCharacter : NPC
     public const float RESTING_INTERVAL = 5.0f;
     public const float LEVELING_INTERVAL = 10.0f;
     public const float ENEMY_NEAR_CHECK_INTERVAL = 0.5f;
-    public const float ENEMY_DETECTION_RADIUS = 10.0f; 
+    public const float ENEMY_DETECTION_RADIUS = 10.0f;
     public const int REST_HP_RECOVERY = 2;
 
 
@@ -45,6 +47,7 @@ public class AutonomousCharacter : NPC
     public float Speed = 10.0f;
 
     [Header("Decision Algorithm Options")]
+    public bool QLearningActive;
     public bool GOBActive;
     public bool GOAPActive;
     public bool MCTSActive;
@@ -52,7 +55,7 @@ public class AutonomousCharacter : NPC
     public bool MCTSWithLimitedDepth;
     public int MCTSNumberOfPlayouts;
     public bool ChangeWhenEnemyNear = true;
- 
+
     [Header("Character Info")]
     public bool Resting = false;
     public bool LevelingUp = false;
@@ -69,9 +72,11 @@ public class AutonomousCharacter : NPC
     public GOBDecisionMaking GOBDecisionMaking { get; set; }
     public DepthLimitedGOAPDecisionMaking GOAPDecisionMaking { get; set; }
     public MCTS MCTSDecisionMaking { get; set; }
+    public QLearning QLearningDecisionMaking { get; set; }
 
     public GameObject nearEnemy { get; private set; }
-
+    public float Reward { get; set; }
+    public RLState OldWorldState { get; set; }
     //private fields for internal use only
 
     private float nextUpdateTime = 0.0f;
@@ -132,9 +137,9 @@ public class AutonomousCharacter : NPC
 
         this.SurviveGoal = new Goal(SURVIVE_GOAL, 11f)
         {
-            
+
         };
-            
+
         this.GainLevelGoal = new Goal(GAIN_LEVEL_GOAL, 3f)
         {
             InsistenceValue = 10.0f,
@@ -210,7 +215,7 @@ public class AutonomousCharacter : NPC
             if (this.GOBActive)
             {
                 this.GOBDecisionMaking = new GOBDecisionMaking(this.Actions, this.Goals);
-                this.AlgorithmName = "GOB" + " SG: " + this.SurviveGoal.Weight 
+                this.AlgorithmName = "GOB" + " SG: " + this.SurviveGoal.Weight
                     + " GL: " + this.GainLevelGoal.Weight
                     + " BQ: " + this.BeQuickGoal.Weight
                     + " GR: " + this.GetRichGoal.Weight;
@@ -244,6 +249,15 @@ public class AutonomousCharacter : NPC
                 if (this.MCTSWithLimitedDepth) this.AlgorithmName += " Limited";
                 this.AlgorithmName += " P: " + this.MCTSNumberOfPlayouts + " Iter: " + this.MCTSDecisionMaking.MaxIterations;
             }
+
+            else if (this.QLearningActive)
+            {
+                var worldModel = new CurrentStateWorldModel(GameManager.Instance, this.Actions, this.Goals);
+                this.AlgorithmName = "QLearning";
+                this.QLearningDecisionMaking = new QLearning(worldModel);
+
+
+            }
         }
 
         DiaryText.text += "My Diary \n I awoke. What a wonderful day to kill Monsters! \n";
@@ -254,7 +268,7 @@ public class AutonomousCharacter : NPC
         if (GameManager.Instance.gameEnded) return;
 
         //Agent Perception 
-        if (Time.time > this.lastEnemyCheckTime + ENEMY_NEAR_CHECK_INTERVAL) 
+        if (Time.time > this.lastEnemyCheckTime + ENEMY_NEAR_CHECK_INTERVAL)
         {
             GameObject enemy = CheckEnemies(ENEMY_DETECTION_RADIUS);
             if (enemy != null)
@@ -276,57 +290,68 @@ public class AutonomousCharacter : NPC
         if (Time.time > this.nextUpdateTime || GameManager.Instance.WorldChanged)
         {
 
-
-            GameManager.Instance.WorldChanged = false;
-            this.nextUpdateTime = Time.time + DECISION_MAKING_INTERVAL;
-            var duration = Time.time - this.lastUpdateTime;
-
-            //first step, perceptions
-            //update the agent's goals based on the state of the world
-
-            // Max Health minus current Health
-            this.SurviveGoal.InsistenceValue = baseStats.MaxHP - baseStats.HP;
-            // Normalize it to 0-10
-            this.SurviveGoal.InsistenceValue = NormalizeGoalValues(this.SurviveGoal.InsistenceValue, 0, baseStats.Level * 10);
-
-            this.BeQuickGoal.InsistenceValue = baseStats.Time;
-            this.BeQuickGoal.InsistenceValue = NormalizeGoalValues(this.BeQuickGoal.InsistenceValue, 0, (float)GameManager.GameConstants.TIME_LIMIT);
-
-            this.GainLevelGoal.InsistenceValue += this.GainLevelGoal.ChangeRate * duration; //increase in goal over time
-            if (baseStats.Level > this.previousLevel)
-            {
-                this.GainLevelGoal.InsistenceValue -= (baseStats.Level - this.previousLevel) * 10;
-                this.previousLevel = baseStats.Level;
-            }
-            this.GainLevelGoal.InsistenceValue = NormalizeGoalValues(this.GainLevelGoal.InsistenceValue, 0, baseStats.Level * 10);
-
-            this.GetRichGoal.InsistenceValue += this.GetRichGoal.ChangeRate * duration - (baseStats.Money-this.previousGold);
-            this.GetRichGoal.InsistenceValue = NormalizeGoalValues(this.GetRichGoal.InsistenceValue, 0, 25);
-            this.previousGold = baseStats.Money;
-
-            this.SurviveGoalText.text = "Survive: " + this.SurviveGoal.InsistenceValue + " (" + this.SurviveGoal.Weight + ")";
-            this.GainXPGoalText.text = "Gain Level: " + this.GainLevelGoal.InsistenceValue.ToString("F1") + " (" + this.GainLevelGoal.Weight + ")"; ;
-            this.BeQuickGoalText.text = "Be Quick: " + this.BeQuickGoal.InsistenceValue.ToString("F1") + " (" + this.BeQuickGoal.Weight + ")"; ;
-            this.GetRichGoalText.text = "GetRich: " + this.GetRichGoal.InsistenceValue.ToString("F1") + " (" + this.GetRichGoal.Weight + ")"; ;
-            this.DiscontentmentText.text = "Discontentment: " + this.CalculateDiscontentment().ToString("F1");
-
-            this.lastUpdateTime = Time.time;
-            
-            //To have a new decision lets initialize Decision Making Proccess
-            this.CurrentAction = null;
-            if (GOBActive)
-            {
-                this.GOBDecisionMaking.InProgress = true;
-            }
-            else if (GOAPActive)  //Add here other Algorithms...
-            {
-                this.GOAPDecisionMaking.InitializeDecisionMakingProcess();
-            } 
-            else if (MCTSActive)
-            {
-                this.MCTSDecisionMaking.InitializeMCTSearch();
-            }
         }
+        GameManager.Instance.WorldChanged = false;
+        this.nextUpdateTime = Time.time + DECISION_MAKING_INTERVAL;
+        var duration = Time.time - this.lastUpdateTime;
+
+        //first step, perceptions
+        //update the agent's goals based on the state of the world
+
+        // Max Health minus current Health
+        this.SurviveGoal.InsistenceValue = baseStats.MaxHP - baseStats.HP;
+        // Normalize it to 0-10
+        this.SurviveGoal.InsistenceValue = NormalizeGoalValues(this.SurviveGoal.InsistenceValue, 0, baseStats.Level * 10);
+
+        this.BeQuickGoal.InsistenceValue = baseStats.Time;
+        this.BeQuickGoal.InsistenceValue = NormalizeGoalValues(this.BeQuickGoal.InsistenceValue, 0, (float)GameManager.GameConstants.TIME_LIMIT);
+
+        this.GainLevelGoal.InsistenceValue += this.GainLevelGoal.ChangeRate * duration; //increase in goal over time
+        if (baseStats.Level > this.previousLevel)
+        {
+            this.GainLevelGoal.InsistenceValue -= (baseStats.Level - this.previousLevel) * 10;
+            this.previousLevel = baseStats.Level;
+        }
+        this.GainLevelGoal.InsistenceValue = NormalizeGoalValues(this.GainLevelGoal.InsistenceValue, 0, baseStats.Level * 10);
+
+        this.GetRichGoal.InsistenceValue += this.GetRichGoal.ChangeRate * duration - (baseStats.Money - this.previousGold);
+        this.GetRichGoal.InsistenceValue = NormalizeGoalValues(this.GetRichGoal.InsistenceValue, 0, 25);
+        this.previousGold = baseStats.Money;
+
+        this.SurviveGoalText.text = "Survive: " + this.SurviveGoal.InsistenceValue + " (" + this.SurviveGoal.Weight + ")";
+        this.GainXPGoalText.text = "Gain Level: " + this.GainLevelGoal.InsistenceValue.ToString("F1") + " (" + this.GainLevelGoal.Weight + ")"; ;
+        this.BeQuickGoalText.text = "Be Quick: " + this.BeQuickGoal.InsistenceValue.ToString("F1") + " (" + this.BeQuickGoal.Weight + ")"; ;
+        this.GetRichGoalText.text = "GetRich: " + this.GetRichGoal.InsistenceValue.ToString("F1") + " (" + this.GetRichGoal.Weight + ")"; ;
+        this.DiscontentmentText.text = "Discontentment: " + this.CalculateDiscontentment().ToString("F1");
+
+        this.lastUpdateTime = Time.time;
+
+        //To have a new decision lets initialize Decision Making Proccess
+        this.CurrentAction = null;
+        if (GOBActive)
+        {
+            this.GOBDecisionMaking.InProgress = true;
+        }
+        else if (GOAPActive)  //Add here other Algorithms...
+        {
+            this.GOAPDecisionMaking.InitializeDecisionMakingProcess();
+        }
+        else if (MCTSActive)
+        {
+            this.MCTSDecisionMaking.InitializeMCTSearch();
+        }
+        else if (QLearningActive)
+        {
+            //IMPORTANT
+            if (GameManager.Instance.WorldChanged)
+            {
+                var newState = RLState.Create(new CurrentStateWorldModel(GameManager.Instance, this.Actions, this.Goals));
+                this.QLearningDecisionMaking.UpdateQTable(this.OldWorldState, this.CurrentAction, this.Reward, newState);
+            }
+            this.QLearningDecisionMaking.Initialize();
+        }
+
+    
 
         if (this.controlledByPlayer)
         {
@@ -368,6 +393,11 @@ public class AutonomousCharacter : NPC
         else if (this.MCTSActive)
         {
             this.UpdateMCTS();
+        }
+
+        else if (this.QLearningActive)
+        {
+            this.UpdateQLearning();
         }
 
         if (this.CurrentAction != null)
@@ -534,6 +564,11 @@ public class AutonomousCharacter : NPC
         }
     }
 
+    private void UpdateQLearning()
+    {
+        this.CurrentAction = this.QLearningDecisionMaking.ChooseAction();
+        this.OldWorldState = RLState.Create(new CurrentStateWorldModel(GameManager.Instance, this.Actions, this.Goals));
+    }
 
     void DrawPath()
     {

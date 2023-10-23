@@ -68,5 +68,10 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.ForwardModel.ForwardModelActio
             //you would be dumb not to level up if possible
             return -1000.0f;
         }
+
+        public override float GetReward(WorldModel worldModel)
+        {
+            return 90f;
+        }
     }
 }

@@ -6,6 +6,7 @@ using UnityEngine.UI;
 using Assets.Scripts.Game.NPCs;
 using System.IO;
 using System.Text;
+using Assets.Scripts.IAJ.Unity.DecisionMaking.ForwardModel;
 
 public class GameManager : MonoBehaviour
 {
@@ -51,6 +52,8 @@ public class GameManager : MonoBehaviour
     public bool gameEnded { get; set; } = false;
     public Vector3 initialPosition { get; set; }
     private int gameWon;
+    public int maxQlearningIterations { get; set; } = 100;
+    public int currentQLearningIteration { get; set; }
 
     void Awake()
     {
@@ -58,6 +61,20 @@ public class GameManager : MonoBehaviour
         UpdateDisposableObjects();
         this.WorldChanged = false;
         this.Character = GameObject.FindGameObjectWithTag("Player").GetComponent<AutonomousCharacter>();
+        this.Character.Reward = 0;
+
+        this.initialPosition = this.Character.gameObject.transform.position;
+    }
+
+    void StartGame()
+    {
+        this.currentQLearningIteration = 0;
+        this.gameEnded = false; 
+        this.gameWon = 0;
+
+        this.WorldChanged = false;
+        this.Character = GameObject.FindGameObjectWithTag("Player").GetComponent<AutonomousCharacter>();
+        this.Character.Reward = 0;
 
         this.initialPosition = this.Character.gameObject.transform.position;
     }
@@ -140,6 +157,7 @@ public class GameManager : MonoBehaviour
                 this.gameEnded = true;
                 this.GameEnd.GetComponentInChildren<Text>().text = "You Died";
                 this.gameWon = 0;
+                this.Character.Reward = -100;
             }
             else if (this.Character.baseStats.Money >= 25)
             {
@@ -147,6 +165,7 @@ public class GameManager : MonoBehaviour
                 this.gameEnded = true;
                 this.GameEnd.GetComponentInChildren<Text>().text = "Victory \n GG EZ";
                 this.gameWon = 1;
+                this.Character.Reward = 100;
             }
             if (this.gameEnded)
             {
@@ -160,6 +179,11 @@ public class GameManager : MonoBehaviour
                     + "," + this.gameWon 
                     + "," + this.SleepingNPCs
                     + "," + this.Character.ChangeWhenEnemyNear + "\n");
+
+                if (this.currentQLearningIteration < this.maxQlearningIterations)
+                {
+                    StartGame();
+                }
             }
         }
     }
@@ -285,6 +309,7 @@ public class GameManager : MonoBehaviour
             this.Character.baseStats.Mana -= 2;
 
             this.WorldChanged = true;
+            // add reward
         }
     }
 
