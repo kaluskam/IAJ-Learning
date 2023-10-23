@@ -130,7 +130,7 @@ public class AutonomousCharacter : NPC
         //initialization of the GOB decision making
         //let's start by creating 4 main goals
 
-        this.SurviveGoal = new Goal(SURVIVE_GOAL, 2f)
+        this.SurviveGoal = new Goal(SURVIVE_GOAL, 11f)
         {
             
         };
@@ -141,13 +141,13 @@ public class AutonomousCharacter : NPC
             ChangeRate = 0.2f
         };
 
-        this.GetRichGoal = new Goal(GET_RICH_GOAL, 1f)
+        this.GetRichGoal = new Goal(GET_RICH_GOAL, 4f)
         {
             InsistenceValue = 5.0f,
             ChangeRate = 0.2f
         };
 
-        this.BeQuickGoal = new Goal(BE_QUICK_GOAL, 0.2f)
+        this.BeQuickGoal = new Goal(BE_QUICK_GOAL, 0f)
         {
             ChangeRate = 1f,
         };

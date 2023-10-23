@@ -91,8 +91,6 @@ GOB SG: 11 GL: 3 BQ: 0 GR: 1,30,0, 0,150,15,3,0,False,True
 GOB SG: 11 GL: 3 BQ: 0 GR: 4,-3,0, 20,54,5,2,0,False,True
 MCTS Limited P: 1 Iter: 5000,-2,0, 20,20,0,1,0,False,False
 MCTS Biased P: 5 Iter: 5000,10,0, 0,126,25,1,1,True,False
-GOB SG: 11 GL: 3 BQ: 0 GR: 4,20,0, 0,150,15,2,0,True,False
-GOB SG: 11 GL: 3 BQ: 0 GR: 4,20,0, 0,150,15,2,0,True,False
-GOAP SG: 11 GL: 3 BQ: 0 GR: 4,12,0, 0,150,0,2,0,True,False
-MCTS Biased P: 5 Iter: 5000,10,0, 0,116,25,1,1,True,False
-MCTS Biased Limited P: 1 Iter: 5000,6,10, 8,140,25,1,1,True,False
+GOB SG: 11 GL: 3 BQ: 0 GR: 4,-3,0, 20,54,5,2,0,False,True
+MCTS P: 1 Iter: 5000,-5,0, 19,38,0,1,0,False,True
+GOB SG: 11 GL: 3 BQ: 0 GR: 4,10,0, 0,24,25,1,1,False,True
