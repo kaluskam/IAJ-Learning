@@ -1,12 +1,14 @@
 using Assets.Scripts.IAJ.Unity.DecisionMaking.ForwardModel;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Assets.Scripts.IAJ.Unity.DecisionMaking.RL
 {
     public class QTable
     {
         private RLState[] states; // TODO filling this array
-        private Dictionary<(RLState, Action), float> values;
+        
+        private Dictionary<(RLState, Action), float> values = new Dictionary<(RLState, Action), float>();
         private System.Random randomGenerator;
         public QTable()
         {
@@ -30,16 +32,37 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.RL
 
         }
 
-
-        public Action GetBestAction(RLState state)
+        private Action[] GetActions(RLState state)
         {
-            RLState futureState = null;
-            Action[] possibleActions = null;
+            return this.values.Keys.Where(k => k.Item1 == state)
+                .Select(k => k.Item2)
+                .ToArray();
+        }
+
+        public Action GetBestAction(RLState state, Action[] executableActions)
+        {
+            Action[] possibleActions = executableActions;
             float bestQValue = 0;
             Action bestAction = possibleActions[0];
             foreach (var a in possibleActions)
             {
-                var QValue = this.GetQValue(futureState, a);
+                var QValue = this.GetQValue(state, a);
+                if (QValue > bestQValue)
+                {
+                    bestQValue = QValue;
+                    bestAction = a;
+                }
+            }
+            return bestAction;
+        }
+        public Action GetBestAction(RLState state)
+        {
+            Action[] possibleActions = GetActions(state);
+            float bestQValue = 0;
+            Action bestAction = possibleActions[0];
+            foreach (var a in possibleActions)
+            {
+                var QValue = this.GetQValue(state, a);
                 if (QValue > bestQValue)
                 {
                     bestQValue = QValue;
@@ -52,7 +75,7 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.RL
         public float GetBestQValue(RLState state)
         {
    
-            Action[] possibleActions = null; //GET ACTIONS
+            Action[] possibleActions = GetActions(state); //GET ACTIONS
             float bestQValue = 0;
             foreach (var a in possibleActions)
             {

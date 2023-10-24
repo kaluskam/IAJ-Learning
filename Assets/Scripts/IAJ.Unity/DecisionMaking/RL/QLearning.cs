@@ -28,6 +28,8 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.RL
             this.nu = 0.1f;
             this.eps = 0.1f;
             this.randomGenerator = new System.Random();
+            this.learningInProgress = true;
+            this.qTable = new QTable();
         }
 
         public void Initialize()
@@ -68,7 +70,7 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.RL
 
         private Action ChooseBestAction(RLState state)
         {
-            return qTable.GetBestAction(state);
+            return qTable.GetBestAction(state, currentState.GetExecutableActions());
         }
 
         public void UpdateQTable(RLState state, Action action, float reward, RLState newState)

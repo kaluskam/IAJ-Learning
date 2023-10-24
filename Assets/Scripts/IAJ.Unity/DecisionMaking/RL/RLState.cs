@@ -1,7 +1,7 @@
 using Assets.Scripts.Game;
 using Assets.Scripts.IAJ.Unity.DecisionMaking.ForwardModel;
 using System;
-using System.Numerics;
+using UnityEngine;
 
 namespace Assets.Scripts.IAJ.Unity.DecisionMaking.RL
 {
@@ -52,7 +52,7 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.RL
             stateValues[0] = ConvertHP((int)worldModel.GetProperty(Properties.HP));
             stateValues[1] = ConvertMana((int)worldModel.GetProperty(Properties.MANA));
             stateValues[2] = Convert.ToInt16( worldModel.GetProperty(Properties.LEVEL));
-            stateValues[3] = ConvertXP((int)worldModel.GetProperty(Properties.XP));
+            stateValues[3] = ConvertXP(Convert.ToInt32(worldModel.GetProperty(Properties.XP)));
             stateValues[4] = ConvertTime((float)worldModel.GetProperty(Properties.TIME));
             stateValues[5] = ConvertPosition((Vector3)worldModel.GetProperty(Properties.POSITION));
         }
@@ -88,15 +88,15 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.RL
 
         private short ConvertPosition(Vector3 position)
         {
-            if (position.Z < 49)
+            if (position.z < 49)
             {
-                if (position.X < 54) return 0; // DOWN LEFT
+                if (position.x < 54) return 0; // DOWN LEFT
                 return 1; // DOWN RIGHT
 
             }
             else
             {
-                if (position.X < 64) return 2; // UP LEFT
+                if (position.x < 64) return 2; // UP LEFT
                 return 3; // UP RIGHT
             }
         }
