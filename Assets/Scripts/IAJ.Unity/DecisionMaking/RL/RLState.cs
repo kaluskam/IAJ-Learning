@@ -1,6 +1,8 @@
 using Assets.Scripts.Game;
 using Assets.Scripts.IAJ.Unity.DecisionMaking.ForwardModel;
 using System;
+using System.Data.SqlTypes;
+using System.Xml.XPath;
 using UnityEngine;
 
 namespace Assets.Scripts.IAJ.Unity.DecisionMaking.RL
@@ -8,6 +10,35 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.RL
     [Serializable]
     public class RLState
     {
+        enum HP
+        {
+            VERY_LOW, LOW, OK, HIGH
+        }
+        enum MANA
+        {
+            LOW, MEDIUM, HIGH
+        }
+
+        enum XP
+        {
+            LOW, HIGH
+        }
+
+        enum TIME { 
+            LESS_38, LESS_75, LESS_112, LESS_149, MORE_150
+        }
+        enum POSITION { 
+            LEFT_UP, LEFT_DOWN, RIGHT_UP, RIGHT_DOWN
+        }
+
+
+        private HP hp;
+        private MANA mana;
+        private XP xp;
+        private short level;
+        private TIME time;
+        private POSITION position;
+        private short money;
         private short[] stateValues = new short[6];
         /* 
          * 0 - HP
@@ -50,57 +81,120 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.RL
 
         public void CreateFrom(WorldModel worldModel)
         {
-            stateValues[0] = ConvertHP(Convert.ToInt32(worldModel.GetProperty(Properties.HP)));
-            stateValues[1] = ConvertMana(Convert.ToInt32(worldModel.GetProperty(Properties.MANA)));
-            stateValues[2] = Convert.ToInt16(worldModel.GetProperty(Properties.LEVEL));
-            stateValues[3] = ConvertXP(Convert.ToInt32(worldModel.GetProperty(Properties.XP)));
-            stateValues[4] = ConvertTime((float)worldModel.GetProperty(Properties.TIME));
-            stateValues[5] = ConvertPosition((Vector3)worldModel.GetProperty(Properties.POSITION));
+            hp = ConvertHP(Convert.ToInt32(worldModel.GetProperty(Properties.HP)));
+            mana = ConvertMana(Convert.ToInt32(worldModel.GetProperty(Properties.MANA)));
+            level = Convert.ToInt16(worldModel.GetProperty(Properties.LEVEL));
+            xp = ConvertXP(Convert.ToInt32(worldModel.GetProperty(Properties.XP)));
+            time = ConvertTime((float)worldModel.GetProperty(Properties.TIME));
+            position = ConvertPosition((Vector3)worldModel.GetProperty(Properties.POSITION));
+            money = Convert.ToInt16(worldModel.GetProperty(Properties.MONEY));
         }
-        private short ConvertHP(int hp)
+        private HP ConvertHP(int hp)
         {
-            if (hp <= 3) return 0;
-            if (hp <= 6) return 1;
-            if (hp <= 12) return 2;
-            return 3;
+            if (hp <= 3) return HP.VERY_LOW;
+            if (hp <= 6) return HP.LOW;
+            if (hp <= 12) return HP.OK;
+            return HP.HIGH;
         }
 
-        private short ConvertMana(int mana)
+        private MANA ConvertMana(int mana)
         {
-            if (mana <= 1) return 0;
-            if (mana <= 4) return 1;
-            return 2;
+            if (mana <= 1) return MANA.LOW;
+            if (mana <= 4) return MANA.MEDIUM;
+            return MANA.HIGH;
         }
 
-        private short ConvertXP(int xp)
+        private XP ConvertXP(int xp)
         {
-            if (xp <= 9) return 0;
-            return 1;
+            if (xp <= 9) return XP.LOW;
+            return XP.HIGH;
         }
 
-        private short ConvertTime(float time)
+        private TIME ConvertTime(float time)
         {
-            if (time <= 38) return 0;
-            if (time <= 75) return 1;
-            if (time <= 112) return 2;
-            if (time <= 149) return 3;
-            return 4;
+            if (time <= 38) return TIME.LESS_38;
+            if (time <= 75) return TIME.LESS_75;
+            if (time <= 112) return TIME.LESS_112;
+            if (time <= 149) return TIME.LESS_149;
+            return TIME.MORE_150;
         }
 
-        private short ConvertPosition(Vector3 position)
+        private POSITION ConvertPosition(Vector3 position)
         {
             if (position.z < 49)
             {
-                if (position.x < 54) return 0; // DOWN LEFT
-                return 1; // DOWN RIGHT
+                if (position.x < 54) return POSITION.LEFT_DOWN; // DOWN LEFT
+                return POSITION.RIGHT_DOWN; // DOWN RIGHT
 
             }
             else
             {
-                if (position.x < 64) return 2; // UP LEFT
-                return 3; // UP RIGHT
+                if (position.x < 64) return POSITION.LEFT_UP; // UP LEFT
+                return POSITION.RIGHT_UP; // UP RIGHT
             }
         }
+
+        public override string ToString()
+        {
+            return "HP: " + hp + " Mana: " + mana + " Level: " + level + " XP: " + xp +
+                " Money: " + money + " Position: " + position + " Time: " + time;
+        }
+
+        //public void CreateFrom(WorldModel worldModel)
+        //{
+        //    stateValues[0] = ConvertHP(Convert.ToInt32(worldModel.GetProperty(Properties.HP)));
+        //    stateValues[1] = ConvertMana(Convert.ToInt32(worldModel.GetProperty(Properties.MANA)));
+        //    stateValues[2] = Convert.ToInt16(worldModel.GetProperty(Properties.LEVEL));
+        //    stateValues[3] = ConvertXP(Convert.ToInt32(worldModel.GetProperty(Properties.XP)));
+        //    stateValues[4] = ConvertTime((float)worldModel.GetProperty(Properties.TIME));
+        //    stateValues[5] = ConvertPosition((Vector3)worldModel.GetProperty(Properties.POSITION));
+
+
+        //}
+        //private short ConvertHP(int hp)
+        //{
+        //    if (hp <= 3) return 0;
+        //    if (hp <= 6) return 1;
+        //    if (hp <= 12) return 2;
+        //    return 3;
+        //}
+
+        //private short ConvertMana(int mana)
+        //{
+        //    if (mana <= 1) return 0;
+        //    if (mana <= 4) return 1;
+        //    return 2;
+        //}
+
+        //private short ConvertXP(int xp)
+        //{
+        //    if (xp <= 9) return 0;
+        //    return 1;
+        //}
+
+        //private short ConvertTime(float time)
+        //{
+        //    if (time <= 38) return 0;
+        //    if (time <= 75) return 1;
+        //    if (time <= 112) return 2;
+        //    if (time <= 149) return 3;
+        //    return 4;
+        //}
+
+        //private short ConvertPosition(Vector3 position)
+        //{
+        //    if (position.z < 49)
+        //    {
+        //        if (position.x < 54) return 0; // DOWN LEFT
+        //        return 1; // DOWN RIGHT
+
+        //    }
+        //    else
+        //    {
+        //        if (position.x < 64) return 2; // UP LEFT
+        //        return 3; // UP RIGHT
+        //    }
+        //}
 
 
 

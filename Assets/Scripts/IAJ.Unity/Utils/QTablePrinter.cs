@@ -8,8 +8,8 @@ namespace Assets.Scripts.IAJ.Unity.Utils
 {
     public static class QTablePrinter
     {
-        static int STATE_CELL_LEN = 100;
-        static int ACTION_CELL_LEN = 20;
+        static int STATE_CELL_LEN = 150;
+        static int ACTION_CELL_LEN = 40;
         public static string Pad(string s, int maxLength, char sign)
         {
             StringBuilder sb = new StringBuilder(s);
