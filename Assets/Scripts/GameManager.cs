@@ -66,17 +66,18 @@ public class GameManager : MonoBehaviour
         this.initialPosition = this.Character.gameObject.transform.position;
     }
 
-    void StartGame()
-    {
-        this.currentQLearningIteration = 0;
+    void RestartGame()    {
+        System.Threading.Thread.Sleep(2000);
+        this.currentQLearningIteration++;
         this.gameEnded = false; 
+        this.GameEnd.SetActive(false);
         this.gameWon = 0;
-
         this.WorldChanged = false;
-        this.Character = GameObject.FindGameObjectWithTag("Player").GetComponent<AutonomousCharacter>();
         this.Character.Reward = 0;
 
+        this.Character.ReStart();
         this.initialPosition = this.Character.gameObject.transform.position;
+        UpdateDisposableObjects();
     }
 
     public void UpdateDisposableObjects()
@@ -180,9 +181,16 @@ public class GameManager : MonoBehaviour
                     + "," + this.SleepingNPCs
                     + "," + this.Character.ChangeWhenEnemyNear + "\n");
 
-                if (this.currentQLearningIteration < this.maxQlearningIterations)
+                if (this.Character.QLearningActive && this.currentQLearningIteration < this.maxQlearningIterations)
                 {
-                    StartGame();
+                    var QTablePath = "./Assets/Results/QLearning/QTable_" + currentQLearningIteration;
+                    if (!File.Exists(QTablePath))
+                    {
+                        File.Create(QTablePath);
+                    }
+                    QTablePrinter.SaveToFile(
+                        Character.QLearningDecisionMaking.qTable, QTablePath, true);
+                    RestartGame();
                 }
             }
         }

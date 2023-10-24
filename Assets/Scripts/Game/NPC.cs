@@ -26,6 +26,21 @@ namespace Assets.Scripts.Game
             {
                 return HP + "," + Mana + ", " + XP + "," + Time + "," + Money + "," + Level;
             }
+
+            public Stats Copy()
+            {
+                var copy = new Stats();
+                copy.HP = HP;
+                copy.ShieldHP = ShieldHP;
+                copy.MaxHP = MaxHP;
+                copy.Mana = Mana;
+                copy.XP = XP;
+                copy.Time = Time;
+                copy.Money = Money;
+                copy.Level = Level;
+                copy.Name = Name;
+                return copy;
+            }
         }
 
         protected GameObject character;
@@ -39,6 +54,13 @@ namespace Assets.Scripts.Game
 
 
         void Awake()
+        {
+            previousTarget = new Vector3(0.0f, 0.0f, 0.0f);
+            this.character = this.gameObject;
+            navMeshAgent = this.GetComponent<NavMeshAgent>();
+        }
+
+        public void ReAwake()
         {
             previousTarget = new Vector3(0.0f, 0.0f, 0.0f);
             this.character = this.gameObject;

@@ -30,13 +30,13 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.RL
             this.randomGenerator = new System.Random();
             this.learningInProgress = true;
             this.qTable = new QTable();
+            this.currentState = this.initialState;
         }
 
         public void Initialize()
         {
-            this.initialState.Initialize();
-            this.currentState = this.initialState.GenerateChildWorldModel(); // Take current model from game manager
-            this.CurrentIteration = 0;
+            //this.initialState.Initialize();
+            //this.currentState = this.initialState.GenerateChildWorldModel(); // Take current model from game manager
         }
 
         public Action ChooseAction() // pass the worldmodel

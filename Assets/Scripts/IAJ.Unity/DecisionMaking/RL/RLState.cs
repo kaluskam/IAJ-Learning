@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace Assets.Scripts.IAJ.Unity.DecisionMaking.RL
 {
+    [Serializable]
     public class RLState
     {
         private short[] stateValues = new short[6];
@@ -49,9 +50,9 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.RL
 
         public void CreateFrom(WorldModel worldModel)
         {
-            stateValues[0] = ConvertHP((int)worldModel.GetProperty(Properties.HP));
-            stateValues[1] = ConvertMana((int)worldModel.GetProperty(Properties.MANA));
-            stateValues[2] = Convert.ToInt16( worldModel.GetProperty(Properties.LEVEL));
+            stateValues[0] = ConvertHP(Convert.ToInt32(worldModel.GetProperty(Properties.HP)));
+            stateValues[1] = ConvertMana(Convert.ToInt32(worldModel.GetProperty(Properties.MANA)));
+            stateValues[2] = Convert.ToInt16(worldModel.GetProperty(Properties.LEVEL));
             stateValues[3] = ConvertXP(Convert.ToInt32(worldModel.GetProperty(Properties.XP)));
             stateValues[4] = ConvertTime((float)worldModel.GetProperty(Properties.TIME));
             stateValues[5] = ConvertPosition((Vector3)worldModel.GetProperty(Properties.POSITION));

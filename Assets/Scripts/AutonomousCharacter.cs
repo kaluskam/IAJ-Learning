@@ -86,13 +86,20 @@ public class AutonomousCharacter : NPC
     private int previousLevel = 1;
     public TextMesh playerText;
     private GameObject closestObject;
+    private Stats initialBaseStats;
 
     // Draw path settings
     private LineRenderer lineRenderer;
 
-
     public void Start()
     {
+        initialBaseStats = this.baseStats.Copy();
+        ReStart();
+        
+    }
+    public void ReStart()
+    {
+        this.baseStats = this.initialBaseStats.Copy();
         //This is the actual speed of the agent
         lineRenderer = this.GetComponent<LineRenderer>();
         playerText.text = "";
@@ -112,29 +119,6 @@ public class AutonomousCharacter : NPC
         DiaryText = GameObject.Find("DiaryText").GetComponent<Text>();
 
         nearEnemy = null;
-
-        //var c0 = new Vector3(74.07407f, -9.362079e-16f, 96.32972f);
-        //var c1 = new Vector3(57.40741f, -8.943463e-16f, 94.44444f);
-        //var c2 = new Vector3(81.48148f, -6.065108e-16f, 81.48148f);
-        //var c3 = new Vector3(25.92593f, 2.981156e-16f, 40.74074f);
-        //var c4 = new Vector3(11.11111f, 7.504286e-16f, 20.37037f);
-        //var chestArray = new Vector3[5];
-        //chestArray[0] = (c0);
-        //chestArray[1] = (c1);
-        //chestArray[2] = (c2);
-        //chestArray[3] = (c3);
-        //chestArray[4] = (c4);
-        //foreach (var c in chestArray)
-        //{
-        //    foreach (var cx in chestArray)
-        //    {
-        //       Debug.Log("C" + System.Array.IndexOf(chestArray, c).ToString() + " to " + "C" + System.Array.IndexOf(chestArray, cx).ToString() + ": " + GetDistanceToTarget(c, cx).ToString());
-        //    }
-        //}
-
-        //initialization of the GOB decision making
-        //let's start by creating 4 main goals
-
         this.SurviveGoal = new Goal(SURVIVE_GOAL, 11f)
         {
 
@@ -289,7 +273,16 @@ public class AutonomousCharacter : NPC
 
         if (Time.time > this.nextUpdateTime || GameManager.Instance.WorldChanged)
         {
-
+            if (QLearningActive)
+            {
+                //IMPORTANT
+                if (GameManager.Instance.WorldChanged)
+                {
+                    var newState = RLState.Create(new CurrentStateWorldModel(GameManager.Instance, this.Actions, this.Goals));
+                    this.QLearningDecisionMaking.UpdateQTable(this.OldWorldState, this.CurrentAction, this.Reward, newState);
+                }
+                this.QLearningDecisionMaking.Initialize();
+            }
         }
         GameManager.Instance.WorldChanged = false;
         this.nextUpdateTime = Time.time + DECISION_MAKING_INTERVAL;
@@ -340,16 +333,16 @@ public class AutonomousCharacter : NPC
         {
             this.MCTSDecisionMaking.InitializeMCTSearch();
         }
-        else if (QLearningActive)
-        {
-            //IMPORTANT
-            if (GameManager.Instance.WorldChanged)
-            {
-                var newState = RLState.Create(new CurrentStateWorldModel(GameManager.Instance, this.Actions, this.Goals));
-                this.QLearningDecisionMaking.UpdateQTable(this.OldWorldState, this.CurrentAction, this.Reward, newState);
-            }
-            this.QLearningDecisionMaking.Initialize();
-        }
+        //else if (QLearningActive)
+        //{
+        //    //IMPORTANT
+        //    if (GameManager.Instance.WorldChanged)
+        //    {
+        //        var newState = RLState.Create(new CurrentStateWorldModel(GameManager.Instance, this.Actions, this.Goals));
+        //        this.QLearningDecisionMaking.UpdateQTable(this.OldWorldState, this.CurrentAction, this.Reward, newState);
+        //    }
+        //    this.QLearningDecisionMaking.Initialize();
+        //}
 
     
 
@@ -566,7 +559,11 @@ public class AutonomousCharacter : NPC
 
     private void UpdateQLearning()
     {
-        this.CurrentAction = this.QLearningDecisionMaking.ChooseAction();
+        var action = this.QLearningDecisionMaking.ChooseAction();
+        if (action != null)
+        {
+            this.CurrentAction = action;
+        }
         this.OldWorldState = RLState.Create(new CurrentStateWorldModel(GameManager.Instance, this.Actions, this.Goals));
     }
 

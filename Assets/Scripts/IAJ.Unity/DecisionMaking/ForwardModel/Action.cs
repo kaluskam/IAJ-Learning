@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 namespace Assets.Scripts.IAJ.Unity.DecisionMaking.ForwardModel
 {
+    [Serializable]
     public class Action
     {
         private static int ActionID = 0; 

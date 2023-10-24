@@ -1,12 +1,16 @@
 using Assets.Scripts.IAJ.Unity.DecisionMaking.ForwardModel;
+using Assets.Scripts.IAJ.Unity.Utils;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace Assets.Scripts.IAJ.Unity.DecisionMaking.RL
 {
+    [System.Serializable]
     public class QTable
     {
-        private RLState[] states; // TODO filling this array
+        private RLState[] allStates; // TODO filling this array
+        private Action[] allActions;
         
         private Dictionary<(RLState, Action), float> values = new Dictionary<(RLState, Action), float>();
         private System.Random randomGenerator;
@@ -25,11 +29,14 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.RL
             values.Add((state, action), value);
         }
 
-        public RLState GetRandomState()
+        public Action[] GetActions()
         {
-            var idx = randomGenerator.Next(0, states.Length);
-            return states[idx];
+            return values.Keys.Select(k => k.Item2).Distinct().ToArray();
+        }
 
+        public RLState[] GetStates()
+        {
+            return values.Keys.Select(k => k.Item1).Distinct().ToArray();
         }
 
         private Action[] GetActions(RLState state)
