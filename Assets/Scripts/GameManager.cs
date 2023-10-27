@@ -7,6 +7,7 @@ using Assets.Scripts.Game.NPCs;
 using System.IO;
 using System.Text;
 using Assets.Scripts.IAJ.Unity.DecisionMaking.ForwardModel;
+using Assets.Scripts.IAJ.Unity.DecisionMaking.RL;
 
 public class GameManager : MonoBehaviour
 {
@@ -55,15 +56,24 @@ public class GameManager : MonoBehaviour
     public int maxQlearningIterations { get; set; } = 100;
     public int currentQLearningIteration { get; set; }
 
+    public QLearning qLearning { get; set; }
+
+
     void Awake()
     {
         Instance = this;
+        initializeObjects();
         UpdateDisposableObjects();
         this.WorldChanged = false;
         this.Character = GameObject.FindGameObjectWithTag("Player").GetComponent<AutonomousCharacter>();
         this.Character.Reward = 0;
 
-        this.initialPosition = this.Character.gameObject.transform.position;
+        this.initialPosition = this.Character.gameObject.transform.position;        
+    }
+
+    void Start()
+    {
+        this.qLearning = new QLearning(new Assets.Scripts.Game.CurrentStateWorldModel(this, Character.Actions, Character.Goals));
     }
 
     void RestartGame()    {
@@ -76,18 +86,22 @@ public class GameManager : MonoBehaviour
         this.Character.Reward = 0;
 
         this.Character.ReStart();
-        this.initialPosition = this.Character.gameObject.transform.position;
-        UpdateDisposableObjects();
+        this.Character.gameObject.transform.position = this.initialPosition;
+        SetActiveAllObjects();
+    }
+
+    private void initializeObjects()
+    {
+        this.chests = GameObject.FindGameObjectsWithTag("Chest").ToList();
+        this.skeletons = GameObject.FindGameObjectsWithTag("Skeleton").ToList();
+        this.orcs = GameObject.FindGameObjectsWithTag("Orc").ToList();
+        this.dragons = GameObject.FindGameObjectsWithTag("Dragon").ToList();
     }
 
     public void UpdateDisposableObjects()
     {
         this.enemies = new List<GameObject>();
         this.disposableObjects = new Dictionary<string, List<GameObject>>();
-        this.chests = GameObject.FindGameObjectsWithTag("Chest").ToList();
-        this.skeletons = GameObject.FindGameObjectsWithTag("Skeleton").ToList();
-        this.orcs = GameObject.FindGameObjectsWithTag("Orc").ToList();
-        this.dragons = GameObject.FindGameObjectsWithTag("Dragon").ToList();
         this.enemies.AddRange(this.skeletons);
         this.enemies.AddRange(this.orcs);
         this.enemies.AddRange(this.dragons);
@@ -132,6 +146,18 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    public void SetActiveAllObjects()
+    {
+        UpdateDisposableObjects();
+        foreach(var list in this.disposableObjects.Values)
+        {
+            foreach(var o in list)
+            {
+                o.SetActive(true);
+            }
+        }
+    }
+    
     void FixedUpdate()
     {
         if (!this.gameEnded)
@@ -189,7 +215,7 @@ public class GameManager : MonoBehaviour
                         File.Create(QTablePath);
                     }
                     QTablePrinter.SaveToFile(
-                        Character.QLearningDecisionMaking.qTable, QTablePath, true);
+                        qLearning.qTable, QTablePath, true);
                     RestartGame();
                 }
             }
@@ -345,7 +371,6 @@ public class GameManager : MonoBehaviour
             this.WorldChanged = true;
         }
     }
-
 
     public void GetManaPotion(GameObject manaPotion)
     {

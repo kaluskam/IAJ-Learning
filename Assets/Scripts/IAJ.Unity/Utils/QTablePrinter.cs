@@ -28,6 +28,7 @@ namespace Assets.Scripts.IAJ.Unity.Utils
             {
                 sb.Append(QTablePrinter.Pad(action.Name, ACTION_CELL_LEN, ' ') + '|');
             }
+            sb.Append("\n");
             return sb.ToString();
         }
 
@@ -60,6 +61,9 @@ namespace Assets.Scripts.IAJ.Unity.Utils
             if (printableRepresentation)
             {
                 var content = QTablePrinter.CreatePrintableRepresentantionOfQTable(qTable);
+                if (!File.Exists(path)) {
+                    File.Create(path);
+                }
                 File.WriteAllText(path, content);
             }
             else

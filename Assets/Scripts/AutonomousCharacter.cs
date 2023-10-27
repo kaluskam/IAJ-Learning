@@ -72,7 +72,7 @@ public class AutonomousCharacter : NPC
     public GOBDecisionMaking GOBDecisionMaking { get; set; }
     public DepthLimitedGOAPDecisionMaking GOAPDecisionMaking { get; set; }
     public MCTS MCTSDecisionMaking { get; set; }
-    public QLearning QLearningDecisionMaking { get; set; }
+    //public QLearning QLearningDecisionMaking { get; set; }
 
     public GameObject nearEnemy { get; private set; }
     public float Reward { get; set; }
@@ -93,65 +93,16 @@ public class AutonomousCharacter : NPC
 
     public void Start()
     {
+        initializeActions();
+        initializeUIText();
+        initializeGoals();
         initialBaseStats = this.baseStats.Copy();
         ReStart();
         
     }
-    public void ReStart()
+
+    private void initializeActions()
     {
-        this.baseStats = this.initialBaseStats.Copy();
-        //This is the actual speed of the agent
-        lineRenderer = this.GetComponent<LineRenderer>();
-        playerText.text = "";
-
-
-        // Initializing UI Text
-        this.BeQuickGoalText = GameObject.Find("BeQuickGoal").GetComponent<Text>();
-        this.SurviveGoalText = GameObject.Find("SurviveGoal").GetComponent<Text>();
-        this.GainXPGoalText = GameObject.Find("GainXP").GetComponent<Text>();
-        this.GetRichGoalText = GameObject.Find("GetRichGoal").GetComponent<Text>();
-        this.DiscontentmentText = GameObject.Find("Discontentment").GetComponent<Text>();
-        this.TotalProcessingTimeText = GameObject.Find("ProcessTime").GetComponent<Text>();
-        this.BestDiscontentmentText = GameObject.Find("BestDicont").GetComponent<Text>();
-        this.ProcessedActionsText = GameObject.Find("ProcComb").GetComponent<Text>();
-        this.BestActionText = GameObject.Find("BestAction").GetComponent<Text>();
-        this.BestActionSequence = GameObject.Find("BestActionSequence").GetComponent<Text>();
-        DiaryText = GameObject.Find("DiaryText").GetComponent<Text>();
-
-        nearEnemy = null;
-        this.SurviveGoal = new Goal(SURVIVE_GOAL, 11f)
-        {
-
-        };
-
-        this.GainLevelGoal = new Goal(GAIN_LEVEL_GOAL, 3f)
-        {
-            InsistenceValue = 10.0f,
-            ChangeRate = 0.2f
-        };
-
-        this.GetRichGoal = new Goal(GET_RICH_GOAL, 4f)
-        {
-            InsistenceValue = 5.0f,
-            ChangeRate = 0.2f
-        };
-
-        this.BeQuickGoal = new Goal(BE_QUICK_GOAL, 0f)
-        {
-            ChangeRate = 1f,
-        };
-
-        this.Goals = new List<Goal>
-        {
-            this.SurviveGoal,
-            this.BeQuickGoal,
-            this.GetRichGoal,
-            this.GainLevelGoal
-        };
-
-        //initialize the available actions
-        //Uncomment commented actions after you implement them
-
         this.Actions = new List<Action>();
 
         //First it is necessary to add the actions made available by the elements in the scene
@@ -191,8 +142,63 @@ public class AutonomousCharacter : NPC
         this.Actions.Add(new ShieldOfFaith(this));
         this.Actions.Add(new Rest(this));
         this.Actions.Add(new Teleport(this));
+    }
 
+    private void initializeUIText()
+    {
+        // Initializing UI Text
+        this.BeQuickGoalText = GameObject.Find("BeQuickGoal").GetComponent<Text>();
+        this.SurviveGoalText = GameObject.Find("SurviveGoal").GetComponent<Text>();
+        this.GainXPGoalText = GameObject.Find("GainXP").GetComponent<Text>();
+        this.GetRichGoalText = GameObject.Find("GetRichGoal").GetComponent<Text>();
+        this.DiscontentmentText = GameObject.Find("Discontentment").GetComponent<Text>();
+        this.TotalProcessingTimeText = GameObject.Find("ProcessTime").GetComponent<Text>();
+        this.BestDiscontentmentText = GameObject.Find("BestDicont").GetComponent<Text>();
+        this.ProcessedActionsText = GameObject.Find("ProcComb").GetComponent<Text>();
+        this.BestActionText = GameObject.Find("BestAction").GetComponent<Text>();
+        this.BestActionSequence = GameObject.Find("BestActionSequence").GetComponent<Text>();
+        DiaryText = GameObject.Find("DiaryText").GetComponent<Text>();
+    }
 
+    private void initializeGoals()
+    {
+        this.SurviveGoal = new Goal(SURVIVE_GOAL, 11f)
+        {
+
+        };
+
+        this.GainLevelGoal = new Goal(GAIN_LEVEL_GOAL, 3f)
+        {
+            InsistenceValue = 10.0f,
+            ChangeRate = 0.2f
+        };
+
+        this.GetRichGoal = new Goal(GET_RICH_GOAL, 4f)
+        {
+            InsistenceValue = 5.0f,
+            ChangeRate = 0.2f
+        };
+
+        this.BeQuickGoal = new Goal(BE_QUICK_GOAL, 0f)
+        {
+            ChangeRate = 1f,
+        };
+
+        this.Goals = new List<Goal>
+        {
+            this.SurviveGoal,
+            this.BeQuickGoal,
+            this.GetRichGoal,
+            this.GainLevelGoal
+        };
+    }
+
+    public void ReStart()
+    {
+        this.baseStats = this.initialBaseStats.Copy();
+        lineRenderer = this.GetComponent<LineRenderer>();
+        playerText.text = "";
+        nearEnemy = null;
         // Initialization of Decision Making Algorithms
         if (!this.controlledByPlayer)
         {
@@ -236,11 +242,9 @@ public class AutonomousCharacter : NPC
 
             else if (this.QLearningActive)
             {
-                var worldModel = new CurrentStateWorldModel(GameManager.Instance, this.Actions, this.Goals);
+                //var worldModel = new CurrentStateWorldModel(GameManager.Instance, this.Actions, this.Goals);
                 this.AlgorithmName = "QLearning";
-                this.QLearningDecisionMaking = new QLearning(worldModel);
-
-
+                //QLearningDecisionMaking = new QLearning(worldModel);
             }
         }
 
@@ -279,9 +283,9 @@ public class AutonomousCharacter : NPC
                 if (GameManager.Instance.WorldChanged)
                 {
                     var newState = RLState.Create(new CurrentStateWorldModel(GameManager.Instance, this.Actions, this.Goals));
-                    this.QLearningDecisionMaking.UpdateQTable(this.OldWorldState, this.CurrentAction, this.Reward, newState);
+                    GameManager.Instance.qLearning.UpdateQTable(this.OldWorldState, this.CurrentAction, this.Reward, newState);
                 }
-                this.QLearningDecisionMaking.Initialize();
+                GameManager.Instance.qLearning.Initialize();
             }
         }
         GameManager.Instance.WorldChanged = false;
@@ -559,7 +563,7 @@ public class AutonomousCharacter : NPC
 
     private void UpdateQLearning()
     {
-        var action = this.QLearningDecisionMaking.ChooseAction();
+        var action = GameManager.Instance.qLearning.ChooseAction();
         if (action != null)
         {
             this.CurrentAction = action;
