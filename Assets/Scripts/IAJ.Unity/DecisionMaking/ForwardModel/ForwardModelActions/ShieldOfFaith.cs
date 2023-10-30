@@ -11,7 +11,7 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.ForwardModel.ForwardModelActio
         private AutonomousCharacter Character;
         public ShieldOfFaith(AutonomousCharacter character) : base("ShieldOfFaith")
         {
-            this.Character = character;
+            Character = character;
             this.ShieldHPChange = 5 - Character.baseStats.ShieldHP;
         }
 

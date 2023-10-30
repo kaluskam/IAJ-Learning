@@ -33,11 +33,7 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.RL
             this.currentState = this.initialState;
         }
 
-        public void Initialize()
-        {
-            //this.initialState.Initialize();
-            //this.currentState = this.initialState.GenerateChildWorldModel(); // Take current model from game manager
-        }
+        public QLearning() { }
 
         public Action ChooseAction() // pass the worldmodel
         {

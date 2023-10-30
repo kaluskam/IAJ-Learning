@@ -1,5 +1,6 @@
 using Assets.Scripts.Game;
 using Assets.Scripts.IAJ.Unity.DecisionMaking.ForwardModel;
+using System;
 using UnityEngine;
 
 namespace Assets.Scripts.IAJ.Unity.DecisionMaking.ForwardModel.ForwardModelActions
@@ -10,7 +11,7 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.ForwardModel.ForwardModelActio
         private Vector3 initialPosition = new Vector3 (50, 0, 53.67f);
         public Teleport(AutonomousCharacter character) : base("Teleport")
         {
-            this.Character = character;
+            Character = character;
         }
 
         public override bool CanExecute()

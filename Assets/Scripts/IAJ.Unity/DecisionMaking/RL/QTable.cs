@@ -8,11 +8,9 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.RL
 {
     [System.Serializable]
     public class QTable
-    {
-        private RLState[] allStates; // TODO filling this array
-        private Action[] allActions;
-        
+    {         
         private Dictionary<(RLState, Action), float> values = new Dictionary<(RLState, Action), float>();
+        [System.NonSerialized]
         private System.Random randomGenerator;
         public QTable()
         {
@@ -26,7 +24,7 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.RL
 
         public void SetQValue(RLState state, Action action, float value)
         {
-            values.Add((state, action), value);
+            values[(state, action)] = value;
         }
 
         public Action[] GetActions()
@@ -50,6 +48,9 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.RL
         {
             Action[] possibleActions = executableActions;
             float bestQValue = 0;
+            if (possibleActions.Length == 0) {
+                return null;
+            }
             Action bestAction = possibleActions[0];
             foreach (var a in possibleActions)
             {

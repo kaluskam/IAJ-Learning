@@ -75,7 +75,7 @@ namespace Assets.Scripts.Game
                 if (enemyEnabled && (enemy.transform.position - position).sqrMagnitude <= 100)
                 {
                     this.NextPlayer = 1;
-                    this.NextEnemyAction = new SwordAttack(this.GameManager.Character, enemy);
+                    this.NextEnemyAction = new SwordAttack(GameManager.Character, enemy);
                     this.NextEnemyActions = new Action[] { this.NextEnemyAction };
                     return; 
                 }

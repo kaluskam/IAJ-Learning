@@ -30,7 +30,7 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.BehaviorTree.EnemyTasks
 
         public PatrolAndPursue(Orc monster, GameObject character, Vector3 position1, Vector3 position2, float _range)
         {
-            this.Character = character;
+            Character = character;
             this.Position1 = position1;
             this.Position2 = position2;
             this.myMonster = monster;
@@ -60,7 +60,7 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.BehaviorTree.EnemyTasks
 
         public override Result Run()
         {       
-            var playerPosition = this.Character.transform.position;
+            var playerPosition = Character.transform.position;
             var orcPosition = this.myMonster.transform.position;
 
 

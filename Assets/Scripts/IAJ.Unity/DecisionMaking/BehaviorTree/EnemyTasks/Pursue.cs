@@ -21,7 +21,7 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.BehaviorTree.EnemyTasks
 
         public Pursue(Monster character, GameObject target, float _range)
         {
-            this.Character = character;
+            Character = character;
             this.Target = target;
             range = _range;
         }

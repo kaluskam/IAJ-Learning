@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace Assets.Scripts.IAJ.Unity.DecisionMaking.ForwardModel.ForwardModelActions
 {
+    [System.Serializable]
     public class GetHealthPotion : WalkToTargetAndExecuteAction
     {
         public GetHealthPotion(AutonomousCharacter character, GameObject target) : base("GetHealthPotion",character,target)

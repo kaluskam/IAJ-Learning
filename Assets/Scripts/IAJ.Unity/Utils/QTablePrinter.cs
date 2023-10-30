@@ -1,6 +1,7 @@
 using Assets.Scripts.IAJ.Unity.DecisionMaking.ForwardModel;
 using Assets.Scripts.IAJ.Unity.DecisionMaking.RL;
 using System.IO;
+using System.Linq;
 using System.Text;
 using UnityEngine;
 
@@ -42,8 +43,7 @@ namespace Assets.Scripts.IAJ.Unity.Utils
             foreach (var state in states)
             {
                 StringBuilder line = new StringBuilder();
-                line.Append(state.ToString());
-                line.Append(QTablePrinter.Pad(line.ToString(), STATE_CELL_LEN, ' '));
+                line.Append(QTablePrinter.Pad(state.ToString(), STATE_CELL_LEN, ' '));
                 line.Append("|");
                 foreach (var action in actions)
                 {
@@ -56,20 +56,19 @@ namespace Assets.Scripts.IAJ.Unity.Utils
             return sb.ToString();
         }
 
-        public static void SaveToFile(QTable qTable, string path, bool printableRepresentation)
+        public static void SaveToFile(QTable qTable, string prettyPath, string path)
         {
-            if (printableRepresentation)
-            {
-                var content = QTablePrinter.CreatePrintableRepresentantionOfQTable(qTable);
-                if (!File.Exists(path)) {
-                    File.Create(path);
-                }
-                File.WriteAllText(path, content);
-            }
-            else
-            {
-                ObjectIOManager.WriteToBinaryFile(path, qTable);
-            }
+            
+            var content = QTablePrinter.CreatePrintableRepresentantionOfQTable(qTable);
+            FileStream fileStream = new FileStream(prettyPath,
+                                    FileMode.OpenOrCreate,
+                                    FileAccess.ReadWrite,
+                                    FileShare.None);
+            StreamWriter writer = new StreamWriter(fileStream);
+            writer.Write(content);
+            writer.Close();
+           //TODO - objects need to be serializable
+            //ObjectIOManager.WriteToBinaryFile(path, qTable);            
         }
 
         public static QTable LoadFromFile(string path)

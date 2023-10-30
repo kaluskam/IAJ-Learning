@@ -1,11 +1,10 @@
 using Assets.Scripts.Game;
-using Assets.Scripts.Game.NPCs;
-using Assets.Scripts.IAJ.Unity.DecisionMaking.ForwardModel;
 using System;
 using UnityEngine;
 
 namespace Assets.Scripts.IAJ.Unity.DecisionMaking.ForwardModel.ForwardModelActions
 {
+    [System.Serializable]
     public class DivineSmite : WalkToTargetAndExecuteAction
     {
         private float expectedXPChange;

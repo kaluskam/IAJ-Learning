@@ -283,9 +283,9 @@ public class AutonomousCharacter : NPC
                 if (GameManager.Instance.WorldChanged)
                 {
                     var newState = RLState.Create(new CurrentStateWorldModel(GameManager.Instance, this.Actions, this.Goals));
-                    GameManager.Instance.qLearning.UpdateQTable(this.OldWorldState, this.CurrentAction, this.Reward, newState);
+                    GameManager.qLearning.UpdateQTable(this.OldWorldState, this.CurrentAction, this.Reward, newState);
                 }
-                GameManager.Instance.qLearning.Initialize();
+                GameManager.qLearning.Initialize();
             }
         }
         GameManager.Instance.WorldChanged = false;
@@ -563,7 +563,8 @@ public class AutonomousCharacter : NPC
 
     private void UpdateQLearning()
     {
-        var action = GameManager.Instance.qLearning.ChooseAction();
+        GameManager.qLearning.currentState = new CurrentStateWorldModel(GameManager.Instance, this.Actions, this.Goals);
+        var action = GameManager.qLearning.ChooseAction();
         if (action != null)
         {
             this.CurrentAction = action;

@@ -1,9 +1,14 @@
 using Assets.Scripts.Game;
 using Assets.Scripts.IAJ.Unity.DecisionMaking.ForwardModel;
+using Assets.Scripts.IAJ.Unity.DecisionMaking.RL;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Data.SqlTypes;
 using System.Xml.XPath;
 using UnityEngine;
+using static CodeMonkey.Utils.UI_TextComplex;
+using UnityEngine.UIElements;
 
 namespace Assets.Scripts.IAJ.Unity.DecisionMaking.RL
 {
@@ -140,6 +145,34 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.RL
                 " Money: " + money + " Position: " + position + " Time: " + time;
         }
 
+        public override bool Equals(object obj)
+        {
+            if (obj == null) return false;
+            else 
+            {
+                RLState other = obj as RLState;
+                return other.hp == hp && other.mana == mana &&
+                    other.xp == xp && other.level == level &&
+                    other.money == money && other.position == position &&
+                    other.time == time;
+            }
+        }
+
+        public override int GetHashCode()
+        {
+
+            string hashString = "1";
+            hashString += (int)hp;
+            hashString += (int)mana;
+            hashString += (int)level;
+            hashString += (int)money;
+            hashString += (int)position;
+            hashString += (int)time;
+            hashString += (int)xp;
+            return System.Convert.ToInt32(hashString); 
+        }
+
+
         //public void CreateFrom(WorldModel worldModel)
         //{
         //    stateValues[0] = ConvertHP(Convert.ToInt32(worldModel.GetProperty(Properties.HP)));
@@ -195,11 +228,29 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.RL
         //        return 3; // UP RIGHT
         //    }
         //}
-
-
-
-
-
-
     }
+}
+
+
+
+public class RLStateComparer : IEqualityComparer<RLState>
+{
+
+    public bool Equals(RLState x, RLState y)
+    {
+        if (ReferenceEquals(x, y))
+        {
+            return true;
+        }
+
+        if (x is null || y is null)
+        {
+            return false;
+        }
+
+        return x.Equals(y);
+    }
+
+
+    public int GetHashCode(RLState obj) => obj.GetHashCode();
 }

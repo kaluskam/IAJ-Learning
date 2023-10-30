@@ -12,7 +12,7 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.ForwardModel.ForwardModelActio
         private static int REST_DURATION = 5;
         public Rest(AutonomousCharacter character) : base("Rest")
         {
-            this.Character = character;
+            Character = character;
             this.HPChange = Mathf.Max(Character.baseStats.MaxHP - Character.baseStats.HP, 2);
         }
 

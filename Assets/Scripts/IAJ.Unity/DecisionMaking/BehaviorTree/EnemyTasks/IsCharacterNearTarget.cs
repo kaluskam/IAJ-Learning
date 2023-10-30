@@ -24,7 +24,7 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.BehaviorTree.EnemyTasks
 
         public IsCharacterNearTarget(NPC character, GameObject target, float _range)
         {
-            this.Character = character;
+            Character = character;
             this.Target = target;
             
             range = _range;
@@ -32,7 +32,7 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.BehaviorTree.EnemyTasks
 
         public IsCharacterNearTarget(NPC character, Vector3 targetPosition, float _range)
         {
-            this.Character = character;
+            Character = character;
             this.TargetPosition = targetPosition;
             range = _range;
         }

@@ -23,7 +23,7 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.BehaviorTree.EnemyTasks
 
         public MoveTo(NPC character, Vector3 target, float _range)
         {
-            this.Character = character;
+            Character = character;
             this.Target = target;
             range = _range;
         }

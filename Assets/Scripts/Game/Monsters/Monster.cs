@@ -37,6 +37,7 @@ namespace Assets.Scripts.Game.NPCs
         public bool usingFormation;
 
         public Vector3 DefaultPosition { get; private set; }
+        //public Transform InitialTransform { get; set; }
 
 
         void Start()
@@ -44,7 +45,9 @@ namespace Assets.Scripts.Game.NPCs
             agent = this.GetComponent<NavMeshAgent>();
             this.Target = GameObject.FindGameObjectWithTag("Player");
             this.usingBehaviourTree = GameManager.Instance.BehaviourTreeNPCs;
-            this.DefaultPosition = this.transform.position;
+            this.DefaultPosition = this.transform.position + Vector3.zero;
+
+            Debug.Log("Default pos. of " + this.name + " is " + this.DefaultPosition);
 
             if (!usingBehaviourTree && !GameManager.Instance.SleepingNPCs)
                 Invoke("CheckPlayerPosition", 1.0f);
@@ -52,6 +55,13 @@ namespace Assets.Scripts.Game.NPCs
             if (usingBehaviourTree)
                 InitializeBehaviourTree();
 
+        }
+
+        public override void ReAwake()
+        {
+            base.ReAwake();
+            Debug.Log("Default pos. of " + this.name + " is " + this.DefaultPosition);
+            this.transform.position = this.DefaultPosition + Vector3.zero;
         }
 
         public bool InWeaponRange(GameObject target)

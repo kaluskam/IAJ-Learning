@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -44,6 +40,7 @@ namespace Assets.Scripts.Game
         }
 
         protected GameObject character;
+        protected Vector3 initialPosition;
 
         // Pathfinding
         protected UnityEngine.AI.NavMeshAgent navMeshAgent;
@@ -56,14 +53,14 @@ namespace Assets.Scripts.Game
         void Awake()
         {
             previousTarget = new Vector3(0.0f, 0.0f, 0.0f);
-            this.character = this.gameObject;
+            character = this.gameObject;
             navMeshAgent = this.GetComponent<NavMeshAgent>();
         }
 
-        public void ReAwake()
+        public virtual void ReAwake()
         {
             previousTarget = new Vector3(0.0f, 0.0f, 0.0f);
-            this.character = this.gameObject;
+            character = this.gameObject;
             navMeshAgent = this.GetComponent<NavMeshAgent>();
         }
 
@@ -92,31 +89,26 @@ namespace Assets.Scripts.Game
 
         //Simple way of calculating distance left to target using Unity's navmesh
         public float GetDistanceToTarget(Vector3 originalPosition, Vector3 targetPosition)
-    {
-        var distance = 0.0f;
-
-        NavMeshPath result = new NavMeshPath();
-        var r = navMeshAgent.CalculatePath(targetPosition, result);
-        if (r == true)
         {
-            var currentPosition = originalPosition;
-            foreach (var c in result.corners)
+            var distance = 0.0f;
+
+            NavMeshPath result = new NavMeshPath();
+            var r = navMeshAgent.CalculatePath(targetPosition, result);
+            if (r == true)
             {
-                //Rough estimate, it does not account for shortcuts so we have to multiply it
-                distance += Vector3.Distance(currentPosition, c) * 0.65f;
-                currentPosition = c;
+                var currentPosition = originalPosition;
+                foreach (var c in result.corners)
+                {
+                    //Rough estimate, it does not account for shortcuts so we have to multiply it
+                    distance += Vector3.Distance(currentPosition, c) * 0.65f;
+                    currentPosition = c;
+                }
+                return distance;
             }
-            return distance;
+
+            //Default value
+            return 100;
         }
-
-        //Default value
-        return 100;
-    }
-
-        
-
-
-
         #endregion
 
     }

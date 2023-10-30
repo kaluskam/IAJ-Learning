@@ -1,10 +1,10 @@
 ﻿using Assets.Scripts.Game;
+using Assets.Scripts.IAJ.Unity.DecisionMaking.RL;
 using System;
 using System.Collections.Generic;
 
 namespace Assets.Scripts.IAJ.Unity.DecisionMaking.ForwardModel
 {
-    [Serializable]
     public class Action
     {
         private static int ActionID = 0; 
@@ -120,5 +120,42 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.ForwardModel
             return 0;
         }
 
+        public override bool Equals(object obj)
+        {
+            if (obj == null) return false;
+            else
+            {
+                Action other = obj as Action;
+                return other.Name == this.Name;
+            }
+        }
+
+        public override int GetHashCode()
+        {
+            return Name.GetHashCode();
+        }
+    }
+
+    public class ActionComparer : IEqualityComparer<Action>
+    {
+        public bool Equals(Action x, Action y)
+        {
+            if (ReferenceEquals(x, y))
+            {
+                return true;
+            }
+
+            if (x is null || y is null)
+            {
+                return false;
+            }
+
+            return x.Equals(y);
+        }
+
+        public int GetHashCode(Action obj)
+        {
+            return obj.GetHashCode();
+        }
     }
 }

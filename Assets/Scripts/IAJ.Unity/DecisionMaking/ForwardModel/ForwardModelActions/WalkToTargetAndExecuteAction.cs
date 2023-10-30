@@ -14,13 +14,13 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.ForwardModel.ForwardModelActio
 
         protected WalkToTargetAndExecuteAction(string actionName, AutonomousCharacter character, GameObject target) : base(actionName + "(" + target.name + ")")
         {
-            this.Character = character;
+            Character = character;
             this.Target = target;
         }
 
         public override float GetDuration()
         {
-            return this.GetDuration(this.Character.transform.position);
+            return this.GetDuration(Character.transform.position);
         }
 
         public override float GetDuration(WorldModel worldModel)
@@ -33,7 +33,7 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.ForwardModel.ForwardModelActio
         {
             //rough estimation, with no pathfinding...
             var distance = getDistance(currentPosition, Target.transform.position);
-            var result = distance / this.Character.Speed;
+            var result = distance / Character.Speed;
             return result;
         }
 
@@ -60,10 +60,10 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.ForwardModel.ForwardModelActio
 
         public override void Execute()
         {
-            Vector3 delta = this.Target.transform.position - this.Character.transform.position;
+            Vector3 delta = this.Target.transform.position - Character.transform.position;
             
             if (delta.sqrMagnitude > 5 )
-               this.Character.StartPathfinding(this.Target.transform.position);
+               Character.StartPathfinding(this.Target.transform.position);
         }
 
 

@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace Assets.Scripts.IAJ.Unity.DecisionMaking.ForwardModel.ForwardModelActions
 {
+    [System.Serializable]
     public class GetManaPotion : WalkToTargetAndExecuteAction
     {
         private int MAX_MANA = 10;

@@ -36,6 +36,13 @@ namespace Assets.Scripts.Game.NPCs
             this.inChase = false;  
         }
 
+        public override void ReAwake()
+        {
+            this.inChase = false;
+            this.inShoutChase = false;
+            this.currentTarget = this.PatrolPoint1;
+            base.ReAwake();
+        }
         public override void InitializeBehaviourTree()
         {
             var patrols = GameObject.FindGameObjectsWithTag("Patrol");

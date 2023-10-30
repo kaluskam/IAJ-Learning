@@ -7,6 +7,7 @@ using UnityEngine;
 
 namespace Assets.Scripts.IAJ.Unity.DecisionMaking.ForwardModel.ForwardModelActions
 {
+    [System.Serializable]
     public class EnemyAttack : SwordAttack
     {
 

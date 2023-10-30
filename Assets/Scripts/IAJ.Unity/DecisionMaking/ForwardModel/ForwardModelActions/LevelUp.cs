@@ -11,7 +11,7 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.ForwardModel.ForwardModelActio
 
         public LevelUp(AutonomousCharacter character) : base("LevelUp")
         {
-            this.Character = character;
+            Character = character;
             this.Duration = AutonomousCharacter.LEVELING_INTERVAL;
         }
 

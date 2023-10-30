@@ -30,24 +30,24 @@ namespace Assets.Scripts.Game
         {
 
             //TIP: this code can be optimized by using a dictionary with lambda functions instead of if's  
-            if (propertyName.Equals(Properties.MANA)) return this.GameManager.Character.baseStats.Mana;
+            if (propertyName.Equals(Properties.MANA)) return GameManager.Character.baseStats.Mana;
 
-            if (propertyName.Equals(Properties.XP)) return this.GameManager.Character.baseStats.XP;
+            if (propertyName.Equals(Properties.XP)) return GameManager.Character.baseStats.XP;
 
-            if (propertyName.Equals(Properties.MAXHP)) return this.GameManager.Character.baseStats.MaxHP;
+            if (propertyName.Equals(Properties.MAXHP)) return GameManager.Character.baseStats.MaxHP;
 
-            if (propertyName.Equals(Properties.HP)) return this.GameManager.Character.baseStats.HP;
+            if (propertyName.Equals(Properties.HP)) return GameManager.Character.baseStats.HP;
 
-            if (propertyName.Equals(Properties.ShieldHP)) return this.GameManager.Character.baseStats.ShieldHP;
+            if (propertyName.Equals(Properties.ShieldHP)) return GameManager.Character.baseStats.ShieldHP;
 
-            if (propertyName.Equals(Properties.MONEY)) return this.GameManager.Character.baseStats.Money;
+            if (propertyName.Equals(Properties.MONEY)) return GameManager.Character.baseStats.Money;
 
-            if (propertyName.Equals(Properties.TIME)) return this.GameManager.Character.baseStats.Time;
+            if (propertyName.Equals(Properties.TIME)) return GameManager.Character.baseStats.Time;
 
-            if (propertyName.Equals(Properties.LEVEL)) return this.GameManager.Character.baseStats.Level;
+            if (propertyName.Equals(Properties.LEVEL)) return GameManager.Character.baseStats.Level;
 
             if (propertyName.Equals(Properties.POSITION))
-                return this.GameManager.Character.gameObject.transform.position;
+                return GameManager.Character.gameObject.transform.position;
 
             //if an object name is found in the dictionary of disposable objects, then the object still exists. The object has been removed/destroyed otherwise
             return this.GameManager.disposableObjects.ContainsKey(propertyName);
