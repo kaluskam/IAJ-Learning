@@ -12,6 +12,7 @@ using Assets.Scripts.Game.NPCs;
 using Assets.Scripts.IAJ.Unity.Utils;
 using Assets.Scripts.IAJ.Unity;
 using System.Runtime.CompilerServices;
+using UnityEngine.TextCore.Text;
 
 public class AutonomousCharacter : NPC
 {
@@ -109,7 +110,7 @@ public class AutonomousCharacter : NPC
         foreach (var enemy in GameObject.FindGameObjectsWithTag("Skeleton"))
         {
             this.Actions.Add(new SwordAttack(this, enemy));
-            this.Actions.Add(new DivineSmite(this, enemy));
+            //this.Actions.Add(new DivineSmite(this, enemy));
         }
 
         foreach (var enemy in GameObject.FindGameObjectsWithTag("Orc"))
@@ -127,21 +128,21 @@ public class AutonomousCharacter : NPC
             this.Actions.Add(new PickUpChest(this, chest));
         }
 
-        foreach (var potion in GameObject.FindGameObjectsWithTag("HealthPotion"))
-        {
-            this.Actions.Add(new GetHealthPotion(this, potion));
-        }
+        //foreach (var potion in GameObject.FindGameObjectsWithTag("HealthPotion"))
+        //{
+        //    this.Actions.Add(new GetHealthPotion(this, potion));
+        //}
 
-        foreach (var potion in GameObject.FindGameObjectsWithTag("ManaPotion"))
-        {
-            this.Actions.Add(new GetManaPotion(this, potion));
-        }
+        //foreach (var potion in GameObject.FindGameObjectsWithTag("ManaPotion"))
+        //{
+        //    this.Actions.Add(new GetManaPotion(this, potion));
+        //}
 
         //Then we have a series of extra actions available to Sir Uthgard
         this.Actions.Add(new LevelUp(this));
-        this.Actions.Add(new ShieldOfFaith(this));
-        this.Actions.Add(new Rest(this));
-        this.Actions.Add(new Teleport(this));
+        //this.Actions.Add(new ShieldOfFaith(this));
+        //this.Actions.Add(new Rest(this));
+        //this.Actions.Add(new Teleport(this));
     }
 
     private void initializeUIText()
@@ -251,6 +252,19 @@ public class AutonomousCharacter : NPC
         DiaryText.text += "My Diary \n I awoke. What a wonderful day to kill Monsters! \n";
     }
 
+    private void UpdateQLearning()
+    {
+        GameManager.qLearning.currentState = new CurrentStateWorldModel(GameManager.Instance, this.Actions, this.Goals);
+        var action = GameManager.qLearning.ChooseAction();
+
+
+        if (action != null)
+        {
+            this.CurrentAction = action;
+        }
+        this.OldWorldState = RLState.Create(new CurrentStateWorldModel(GameManager.Instance, this.Actions, this.Goals));
+    }
+
     void FixedUpdate()
     {
         if (GameManager.Instance.gameEnded) return;
@@ -265,7 +279,7 @@ public class AutonomousCharacter : NPC
                 {
                     GameManager.Instance.WorldChanged = true;
                 }
-                AddToDiary(" There is " + enemy.name + " in front of me!");
+                //AddToDiary(" There is " + enemy.name + " in front of me!");
                 this.nearEnemy = enemy;
             }
             else
@@ -275,20 +289,11 @@ public class AutonomousCharacter : NPC
             this.lastEnemyCheckTime = Time.time;
         }
 
-        if (Time.time > this.nextUpdateTime || GameManager.Instance.WorldChanged)
+        if (QLearningActive && GameManager.Instance.WorldChanged) 
         {
-            if (QLearningActive)
-            {
-                //IMPORTANT
-                if (GameManager.Instance.WorldChanged)
-                {
-                    var newState = RLState.Create(new CurrentStateWorldModel(GameManager.Instance, this.Actions, this.Goals));
-                    GameManager.qLearning.UpdateQTable(this.OldWorldState, this.CurrentAction, this.Reward, newState);
-                }
-                GameManager.qLearning.Initialize();
-            }
+            
         }
-        GameManager.Instance.WorldChanged = false;
+        
         this.nextUpdateTime = Time.time + DECISION_MAKING_INTERVAL;
         var duration = Time.time - this.lastUpdateTime;
 
@@ -324,7 +329,7 @@ public class AutonomousCharacter : NPC
         this.lastUpdateTime = Time.time;
 
         //To have a new decision lets initialize Decision Making Proccess
-        this.CurrentAction = null;
+
         if (GOBActive)
         {
             this.GOBDecisionMaking.InProgress = true;
@@ -336,6 +341,12 @@ public class AutonomousCharacter : NPC
         else if (MCTSActive)
         {
             this.MCTSDecisionMaking.InitializeMCTSearch();
+        }
+
+        else if (QLearningActive)
+        { 
+
+
         }
         //else if (QLearningActive)
         //{
@@ -375,46 +386,51 @@ public class AutonomousCharacter : NPC
                     else if (s.Contains("Enemy"))
                         AttackEnemy();
                 }
-
-
         }
 
-        else if (this.GOAPActive)
-        {
-            this.UpdateDLGOAP();
-        }
-        else if (this.GOBActive)
-        {
-            this.UpdateGOB();
-        } 
-        else if (this.MCTSActive)
-        {
-            this.UpdateMCTS();
-        }
+ 
 
-        else if (this.QLearningActive)
-        {
-            this.UpdateQLearning();
-        }
+        else if (this.QLearningActive && GameManager.qLearning.learningInProgress) {
 
-        if (this.CurrentAction != null)
-        {
-            if (this.CurrentAction.CanExecute())
+            if (GameManager.Instance.WorldChanged)
             {
+                this.UpdateQLearning();
 
-                this.CurrentAction.Execute();
+                this.AddToDiary(" I am going to " + this.CurrentAction.Name + "\n");
+                var newState = RLState.Create(new CurrentStateWorldModel(GameManager.Instance, this.Actions, this.Goals));
+
+                GameManager.qLearning.UpdateQTable(this.OldWorldState, this.CurrentAction, this.Reward, newState);
+                GameManager.Instance.WorldChanged = false;
+                this.Reward = 0;
             }
 
+            if (this.CurrentAction != null )
+            {
+                this.CurrentAction.Execute();
+                //AddToDiary("Executing " + this.CurrentAction.Name + "\n");
+            }
+        }
+        else if (this.QLearningActive && !GameManager.qLearning.learningInProgress) {
+            if (GameManager.Instance.WorldChanged)
+            {
+                this.UpdateQLearning();
 
+                this.AddToDiary(" I am going to " + this.CurrentAction.Name + "\n");
+
+                GameManager.Instance.WorldChanged = false;
+
+            }
+
+            if (this.CurrentAction != null)
+            {
+                this.CurrentAction.Execute();
+
+            }
         }
 
-        if (navMeshAgent.hasPath)
-        {
-            DrawPath();
+        
 
-        }
-           
-
+        if (navMeshAgent.hasPath) {DrawPath();}
     }
 
     private GameObject CheckEnemies(float detectionRadius)
@@ -442,135 +458,7 @@ public class AutonomousCharacter : NPC
             DiaryText.text = DiaryText.text.Substring(500);
     }
 
-
-    private void UpdateGOB()
-    {
-
-        bool newDecision = false;
-        if (this.GOBDecisionMaking.InProgress)
-        {
-            //choose an action using the GOB Decision Making process
-            var action = this.GOBDecisionMaking.ChooseAction();
-            if (action != null && action != this.CurrentAction)
-            {
-                this.CurrentAction = action;
-                newDecision = true;
-                if (newDecision)
-                {
-                    var bestDiscont = this.GOBDecisionMaking.ActionDiscontentment[action];
-                    Action secondBestAction = this.GOBDecisionMaking.secondBestAction;
-                    var secondBestDiscont = this.GOBDecisionMaking.ActionDiscontentment[secondBestAction];
-                    Action thirdBestAction = this.GOBDecisionMaking.thirdBestAction;
-                    var thirdBestDiscont = this.GOBDecisionMaking.ActionDiscontentment[thirdBestAction];
-                    AddToDiary(" I decided to " + action.Name);
-                    this.BestActionText.text = "Best Action: " + action.Name + ":" + bestDiscont.ToString("F2") + "\n";
-                    this.BestActionSequence.text = " Second Best:" + secondBestAction.Name + ":" + secondBestDiscont.ToString("F2") + "\n"
-                        + " Third Best:" + thirdBestAction.Name + ":" + thirdBestDiscont.ToString("F2") + "\n";
-                }
-
-            }
-
-        }
-
-    }
-
-    private void UpdateDLGOAP()
-    {
-        bool newDecision = false;
-        if (this.GOAPDecisionMaking.InProgress)
-        {
-            //choose an action using the GOB Decision Making process
-            var action = this.GOAPDecisionMaking.ChooseAction();
-            if (action != null && action != this.CurrentAction)
-            {
-                this.CurrentAction = action;
-                newDecision = true;
-            }
-        }
-
-        this.TotalProcessingTimeText.text = "Process. Time: " + this.GOAPDecisionMaking.TotalProcessingTime.ToString("F");
-        this.BestDiscontentmentText.text = "Best Discontentment: " + this.GOAPDecisionMaking.BestDiscontentmentValue.ToString("F");
-        this.ProcessedActionsText.text = "Act. comb. processed: " + this.GOAPDecisionMaking.TotalActionCombinationsProcessed;
-
-        if (this.GOAPDecisionMaking.BestAction != null)
-        {
-            if (newDecision)
-            {
-                AddToDiary(" I decided to " + GOAPDecisionMaking.BestAction.Name);
-            }
-            var actionText = "";
-            foreach (var action in this.GOAPDecisionMaking.BestActionSequence)
-            {
-                actionText += "\n" + action.Name;
-            }
-            this.BestActionSequence.text = "Best Action Sequence: " + actionText;
-            this.BestActionText.text = "Best Action: " + GOAPDecisionMaking.BestAction.Name;
-        }
-        else
-        {
-            this.BestActionSequence.text = "Best Action Sequence:\nNone";
-            this.BestActionText.text = "Best Action: \n Node";
-        }
-    }
-
-    private void UpdateMCTS()
-    {
-        if (this.MCTSDecisionMaking.InProgress)
-        {
-            var action = this.MCTSDecisionMaking.ChooseAction();
-            if (action != null)
-            {
-                this.CurrentAction = action;
-                AddToDiary(" I decided to " + action.Name);
-            }
-        }
-        // Statistical and Debug data
-        this.TotalProcessingTimeText.text = "Process. Time: " + this.MCTSDecisionMaking.TotalProcessingTime.ToString("F");
-
-        this.ProcessedActionsText.text = "Max Depth: " + this.MCTSDecisionMaking.MaxPlayoutDepthReached.ToString();
-
-        if (this.MCTSDecisionMaking.BestFirstChild != null)
-        {
-            var q = this.MCTSDecisionMaking.BestFirstChild.Q / this.MCTSDecisionMaking.BestFirstChild.N;
-            this.BestDiscontentmentText.text = "Best Exp. Q value: " + q.ToString("F05");
-            var actionText = "";
-            foreach (var action in this.MCTSDecisionMaking.BestActionSequence)
-            {
-                actionText += "\n" + action.Name;
-            }
-            this.BestActionSequence.text = "Best Action Sequence: " + actionText;
-
-            //Debug: What is the predicted state of the world?
-            var endState = MCTSDecisionMaking.BestActionSequenceEndState;
-            var text = "";
-            if (endState != null)
-            {
-                text += "Predicted World State:\n";
-                text += "My Level:" + endState.GetProperty(Properties.LEVEL) + "\n";
-                text += "My HP:" + endState.GetProperty(Properties.HP) + "\n";
-                text += "My Money:" + endState.GetProperty(Properties.MONEY) + "\n";
-                text += "Time Passsed:" + endState.GetProperty(Properties.TIME) + "\n";
-                this.BestActionText.text = text;
-            }
-            else this.BestActionText.text = "No EndState was found";
-        }
-        else
-        {
-            this.BestActionSequence.text = "Best Action Sequence:\nNone";
-            this.BestActionText.text = "";
-        }
-    }
-
-    private void UpdateQLearning()
-    {
-        GameManager.qLearning.currentState = new CurrentStateWorldModel(GameManager.Instance, this.Actions, this.Goals);
-        var action = GameManager.qLearning.ChooseAction();
-        if (action != null)
-        {
-            this.CurrentAction = action;
-        }
-        this.OldWorldState = RLState.Create(new CurrentStateWorldModel(GameManager.Instance, this.Actions, this.Goals));
-    }
+    
 
     void DrawPath()
     {
@@ -674,6 +562,7 @@ public class AutonomousCharacter : NPC
     }
 
     void AttackEnemy()
+
     {
         if (closestObject != null)
             if (GameManager.Instance.InMeleeRange(closestObject))

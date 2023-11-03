@@ -47,8 +47,6 @@ namespace Assets.Scripts.Game.NPCs
             this.usingBehaviourTree = GameManager.Instance.BehaviourTreeNPCs;
             this.DefaultPosition = this.transform.position + Vector3.zero;
 
-            Debug.Log("Default pos. of " + this.name + " is " + this.DefaultPosition);
-
             if (!usingBehaviourTree && !GameManager.Instance.SleepingNPCs)
                 Invoke("CheckPlayerPosition", 1.0f);
 
@@ -74,7 +72,9 @@ namespace Assets.Scripts.Game.NPCs
 
         void FixedUpdate()
         {
+
             if (GameManager.Instance.gameEnded) return;
+
             if (usingBehaviourTree)
             {
                 if(this.BehaviourTree != null) 

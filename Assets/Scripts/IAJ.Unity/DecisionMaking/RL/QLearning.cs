@@ -12,7 +12,6 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.RL
         public float gamma;
         public float eps;
         public float nu;
-        public int MaxIterations;
         public int CurrentIteration; // one iteration is one game, update if game ends
         public QTable qTable;
         public CurrentStateWorldModel initialState;
@@ -24,9 +23,9 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.RL
             this.initialState = worldModel;
             this.alpha = 0.5f;
             this.gamma = 0.9f;
-            this.MaxIterations = 1000;
+
             this.nu = 0.1f;
-            this.eps = 0.1f;
+            this.eps = 0.5f;
             this.randomGenerator = new System.Random();
             this.learningInProgress = true;
             this.qTable = new QTable();
@@ -83,4 +82,5 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.RL
             return (1 - alpha) * currentQValue + alpha * (reward + gamma * maxFutureQValue);
         }
     }
+
 }

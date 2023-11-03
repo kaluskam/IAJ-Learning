@@ -10,6 +10,8 @@ using Assets.Scripts.IAJ.Unity.DecisionMaking.ForwardModel;
 using Assets.Scripts.IAJ.Unity.DecisionMaking.RL;
 using Assets.Scripts.Game;
 using UnityEngine.SceneManagement;
+using Assets.Scripts.IAJ.Unity.DecisionMaking.ForwardModel.ForwardModelActions;
+using System.Text.RegularExpressions;
 
 public class GameManager : MonoBehaviour
 {
@@ -18,7 +20,7 @@ public class GameManager : MonoBehaviour
     {
         public const float UPDATE_INTERVAL = 2.0f;
         public const int TIME_LIMIT = 150;
-        public const int PICKUP_RANGE = 8;
+        public const int PICKUP_RANGE = 15;
 
     }
     public static string Q_TABLES_PATH = "./Assets/Results/QLearning/Tables";
@@ -60,7 +62,7 @@ public class GameManager : MonoBehaviour
     public bool gameEnded { get; set; } = false;
     public Vector3 initialPosition { get; set; }
     private int gameWon;
-    public int maxQlearningIterations { get; set; } = 100;
+    public int maxQlearningIterations { get; set; } = 2000;
     public int currentQLearningIteration { get; set; }
 
     public static QLearning qLearning { get; set; }
@@ -73,10 +75,12 @@ public class GameManager : MonoBehaviour
         DontDestroyOnLoad(Instance);
         initializeObjects();
         UpdateDisposableObjects();
-        Instance.WorldChanged = false;
+        Instance.WorldChanged = true;
         Character = GameObject.FindGameObjectWithTag("Player").GetComponent<AutonomousCharacter>();
         Character.Reward = 0;
         Instance.initialPosition = Character.gameObject.transform.position + Vector3.zero;
+        QTablePrinter.ACTIONS = Character.Actions;
+
     }
 
     void Start()
@@ -84,13 +88,16 @@ public class GameManager : MonoBehaviour
         if (qLearning == null)
         {
             qLearning = new QLearning(new Assets.Scripts.Game.CurrentStateWorldModel(this, Character.Actions, Character.Goals));
-            //if (Directory.GetFiles(Q_TABLES_PATH).Length > 0)
-            //{
-            //    qLearning.CurrentIteration = Directory.GetFiles(Q_TABLES_PATH)
-            //   .Select(fileName => (int)fileName[fileName.Length - 1])
-            //   .Max();
-            //    qLearning.qTable = ObjectIOManager.ReadFromBinaryFile<QTable>(Q_TABLES_PATH  + "/QTable_"+ qLearning.CurrentIteration);
-            //} //TODO           
+            QTablePrinter.ACTIONS = Character.Actions;
+            if (Directory.GetFiles(Q_TABLES_PATH).Length > 0)
+            {
+                var lastIteration = Directory.GetFiles(Q_TABLES_PATH)
+               .Select(fileName => System.Convert.ToInt16(Regex.Match(fileName, "[0-9]+").Value))
+               .Max();
+                qLearning.qTable = QTablePrinter.LoadFromFile(Q_TABLES_PATH + "/QTable_" + lastIteration);
+                Debug.Log(lastIteration);
+                qLearning.CurrentIteration = lastIteration + 1;
+            } //TODO           
         }        
     }
 
@@ -218,11 +225,20 @@ public class GameManager : MonoBehaviour
             {
                 if (Character.QLearningActive && qLearning.CurrentIteration < this.maxQlearningIterations)
                 {
-                    var QTablePrettyPath = Q_TABLES_PRETTY_PATH + "/QTable_" + qLearning.CurrentIteration;    
-                    var QTablePath = Q_TABLES_PATH + "/QTable_" + qLearning.CurrentIteration;
-                    QTablePrinter.SaveToFile(
-                        qLearning.qTable, QTablePrettyPath, QTablePath);
-                    RestartGame();
+                    if (qLearning.CurrentIteration < 4000)
+                    {
+                        var QTablePrettyPath = Q_TABLES_PRETTY_PATH + "/QTable_" + qLearning.CurrentIteration;
+                        var QTablePath = Q_TABLES_PATH + "/QTable_" + qLearning.CurrentIteration;
+                        QTablePrinter.SaveToFile(qLearning.qTable, QTablePrettyPath, QTablePath);
+                        RestartGame();
+
+                    }
+                    else 
+                    {
+                        qLearning.learningInProgress = false;
+                        Debug.Log(this.gameWon);
+                        RestartGame();
+                    }
                 }
             }
         }
@@ -233,7 +249,6 @@ public class GameManager : MonoBehaviour
         int damage = 0;
 
         Monster.EnemyStats enemyData = enemy.GetComponent<Monster>().enemyStats;
-
         if (enemy != null && enemy.activeSelf && InMeleeRange(enemy))
         {
             Character.AddToDiary(" I Sword Attacked " + enemy.name);
@@ -367,13 +382,14 @@ public class GameManager : MonoBehaviour
     public void PickUpChest(GameObject chest)
     {
 
+
         if (chest != null && chest.activeSelf && InChestRange(chest))
         {
             Character.AddToDiary(" I opened  " + chest.name);
             this.chests.Remove(chest);
             this.disposableObjects.Remove(chest.name);
             chest.SetActive(false);
-      
+            Character.Reward = 30;
             Character.baseStats.Money += 5;
             this.WorldChanged = true;
         }
@@ -389,6 +405,7 @@ public class GameManager : MonoBehaviour
     
             Character.baseStats.Mana = 10;
             this.WorldChanged = true;
+            
         }
     }
 
@@ -428,36 +445,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void LayOnHands()
-    {
-        if (Character.baseStats.Level >= 2 && Character.baseStats.Mana >= 7)
-        {
-            Character.AddToDiary(" With my Mana I Lay Hands and recovered all my health.");
-            Character.baseStats.HP = Character.baseStats.MaxHP;
-            Character.baseStats.Mana -= 7;
-            this.WorldChanged = true;
-        }
-    }
-
-    public void DivineWrath()
-    {
-        if (Character.baseStats.Level >= 3 && Character.baseStats.Mana >= 10)
-        {
-            //kill all enemies in the map
-            foreach (var enemy in this.enemies)
-            {
-                Character.baseStats.XP += enemy.GetComponent<Monster>().enemyStats.XPvalue;
-                Character.AddToDiary(" I used the Divine Wrath and all monsters were killed! \nSo ends a day's work...");
-                enemy.SetActive(false);
-                this.disposableObjects.Remove(enemy.name);
-            
-            }
-
-            enemies.Clear();
-            this.WorldChanged = true;
-        }
-    }
-
+ 
     public void Rest()
     {
         if (!Character.Resting)

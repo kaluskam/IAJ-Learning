@@ -1,5 +1,6 @@
 using Assets.Scripts.IAJ.Unity.DecisionMaking.ForwardModel;
 using Assets.Scripts.IAJ.Unity.DecisionMaking.RL;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,7 @@ namespace Assets.Scripts.IAJ.Unity.Utils
     {
         static int STATE_CELL_LEN = 150;
         static int ACTION_CELL_LEN = 40;
+        public static List<Action> ACTIONS;
         public static string Pad(string s, int maxLength, char sign)
         {
             StringBuilder sb = new StringBuilder(s);
@@ -27,7 +29,7 @@ namespace Assets.Scripts.IAJ.Unity.Utils
             sb.Append(Pad(sb.ToString(), STATE_CELL_LEN, ' ') + '|');
             foreach(Action action in actions)
             {
-                sb.Append(QTablePrinter.Pad(action.Name, ACTION_CELL_LEN, ' ') + '|');
+                sb.Append(Pad(action.Name, ACTION_CELL_LEN, ' ') + '|');
             }
             sb.Append("\n");
             return sb.ToString();
@@ -59,7 +61,7 @@ namespace Assets.Scripts.IAJ.Unity.Utils
         public static void SaveToFile(QTable qTable, string prettyPath, string path)
         {
             
-            var content = QTablePrinter.CreatePrintableRepresentantionOfQTable(qTable);
+            var content = CreatePrintableRepresentantionOfQTable(qTable);
             FileStream fileStream = new FileStream(prettyPath,
                                     FileMode.OpenOrCreate,
                                     FileAccess.ReadWrite,
@@ -67,13 +69,33 @@ namespace Assets.Scripts.IAJ.Unity.Utils
             StreamWriter writer = new StreamWriter(fileStream);
             writer.Write(content);
             writer.Close();
+
+            Dictionary<(RLState, string), float> qTableToSave = new Dictionary<(RLState, string), float>();
+            foreach (var key in qTable.values.Keys)
+            {
+                qTableToSave.Add((key.Item1, key.Item2.Name), qTable.values[key]);
+            }
            //TODO - objects need to be serializable
-            //ObjectIOManager.WriteToBinaryFile(path, qTable);            
+           ObjectIOManager.WriteToBinaryFile(path, qTableToSave);            
         }
 
         public static QTable LoadFromFile(string path)
         {
-            QTable qTable = ObjectIOManager.ReadFromBinaryFile<QTable>(path);
+            QTable qTable = new QTable();
+            Dictionary<(RLState, string), float> qTableValues = ObjectIOManager.ReadFromBinaryFile<Dictionary<(RLState, string), float>>(path);
+            foreach (var key in qTableValues.Keys)
+            {
+                Action action = null;
+                foreach(var a in ACTIONS)
+                {
+                    if (a.Name == key.Item2)
+                    {
+                        action = a;
+                        break;
+                    }
+                }
+                qTable.SetQValue(key.Item1, action, qTableValues[key]);
+            }
             return qTable;
         }
     }

@@ -9,7 +9,7 @@ namespace Assets.Scripts.IAJ.Unity.DecisionMaking.RL
     [System.Serializable]
     public class QTable
     {         
-        private Dictionary<(RLState, Action), float> values = new Dictionary<(RLState, Action), float>();
+        public Dictionary<(RLState, Action), float> values = new Dictionary<(RLState, Action), float>();
         [System.NonSerialized]
         private System.Random randomGenerator;
         public QTable()
